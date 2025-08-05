@@ -10,7 +10,7 @@ x500_bag_recorder_node::x500_bag_recorder_node(): Node("x500_bag_recorder_node",
     _flags.saveToBag = -1;
     _flags.reduceOutliers = -1;
     _flags.allowRestart = true;
-
+    startRecording();
     //saving current bag with PATH+YYYYMMDD-HHmm
 
 }
