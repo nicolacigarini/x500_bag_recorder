@@ -9,20 +9,26 @@ x500_bag_recorder_node::x500_bag_recorder_node(): Node("x500_bag_recorder_node",
     setupConnections();
     _flags.saveToBag = -1;
     _flags.reduceOutliers = -1;
-
+    _flags.allowRestart = true;
 
     //saving current bag with PATH+YYYYMMDD-HHmm
+
+}
+
+void x500_bag_recorder_node::startRecording() {
     std::time_t t = std::time(nullptr);
     std::tm tm = *std::localtime(&t);
     char buffer[20];
     std::strftime(buffer, sizeof(buffer), "%Y%m%d-%H%M%S", &tm);
-
-
     rosbag2_storage::StorageOptions storage_options;
     storage_options.uri = this->get_parameter("file_path").as_string() + "/bag_" + std::string(buffer);
     storage_options.storage_id = "sqlite3";
-
     _bagWriter->open(storage_options);
+
+}
+
+void x500_bag_recorder_node::stopRecording() {
+    _bagWriter->close();
 }
 void x500_bag_recorder_node::loadParams() {
     _topics.lidarTopic = this->get_parameter("lidar_subscriber_topic").as_string();
@@ -70,6 +76,15 @@ void x500_bag_recorder_node::vehicleOdomCallback(std::shared_ptr<rclcpp::Seriali
 void x500_bag_recorder_node::rcCallback(const px4_msgs::msg::RcChannels &msg){
     _flags.saveToBag = msg.channels[6];
     _flags.reduceOutliers = msg.channels[7];
+
+    if(msg.channels[11]==1 && _flags.allowRestart){
+        _flags.allowRestart=false;
+        this->stopRecording();
+        this->startRecording();
+    }
+    else {
+        _flags.allowRestart=true;
+    }
 }
 
 

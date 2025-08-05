@@ -12,6 +12,7 @@ class x500_bag_recorder_node : public rclcpp::Node {
     struct Flags {
         int saveToBag;
         int reduceOutliers;
+        bool allowRestart;
     };
 
     struct Topics {
@@ -25,6 +26,8 @@ class x500_bag_recorder_node : public rclcpp::Node {
         x500_bag_recorder_node();
         void loadParams();
         void setupConnections();
+        void startRecording();
+        void stopRecording();
         void lidarCallback(std::shared_ptr<rclcpp::SerializedMessage>);
         void vehicleOdomCallback(std::shared_ptr<rclcpp::SerializedMessage>);
         void imuLidarCallback(std::shared_ptr<rclcpp::SerializedMessage>);
