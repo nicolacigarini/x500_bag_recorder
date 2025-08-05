@@ -7,10 +7,10 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.event_handlers import OnProcessExit
 
 
-ARGUMENTS = [DeclareLaunchArgument("agent_namespace", default_value='x500_1', description="Robot #1 namespace")]
+ARGUMENTS = [DeclareLaunchArgument("namespace", default_value='x500_1', description="Robot #1 namespace")]
 
 def generate_launch_description():
-    namespace = LaunchConfiguration("agent_namespace")
+    namespace = LaunchConfiguration("namespace")
     bag_recorder_params_file = PathJoinSubstitution([FindPackageShare("x500_bag_recorder"), "config", "params.yaml"])
 
     bag_recorder_node = Node(

@@ -41,7 +41,7 @@ class x500_bag_recorder_node : public rclcpp::Node {
         rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr _lidarImuSubscriber;
         rclcpp::Subscription<px4_msgs::msg::RcChannels>::SharedPtr _rcSubscriber;
         rclcpp::Subscription<px4_msgs::msg::VehicleOdometry>::SharedPtr _vehicleOdomSubscriber;
-        std::unique_ptr<rosbag2_cpp::Writer> _bagWriter;
+        rosbag2_cpp::Writer _bagWriter;
 };
 
 

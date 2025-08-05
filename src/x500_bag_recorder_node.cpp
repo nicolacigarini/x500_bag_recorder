@@ -11,11 +11,10 @@ x500_bag_recorder_node::x500_bag_recorder_node(): Node("x500_bag_recorder_node",
     _flags.reduceOutliers = -1;
     _flags.allowRestart = true;
     startRecording();
-    //saving current bag with PATH+YYYYMMDD-HHmm
-
 }
 
 void x500_bag_recorder_node::startRecording() {
+    RCLCPP_INFO(this->get_logger(), "before opening");
     std::time_t t = std::time(nullptr);
     std::tm tm = *std::localtime(&t);
     char buffer[20];
@@ -23,12 +22,14 @@ void x500_bag_recorder_node::startRecording() {
     rosbag2_storage::StorageOptions storage_options;
     storage_options.uri = this->get_parameter("file_path").as_string() + "/bag_" + std::string(buffer);
     storage_options.storage_id = "sqlite3";
-    _bagWriter->open(storage_options);
+    _bagWriter.open(storage_options);   
+     RCLCPP_INFO(this->get_logger(), "after opening");
 
 }
 
 void x500_bag_recorder_node::stopRecording() {
-    _bagWriter->close();
+    _bagWriter.close();
+    
 }
 void x500_bag_recorder_node::loadParams() {
     _topics.lidarTopic = this->get_parameter("lidar_subscriber_topic").as_string();
@@ -43,7 +44,7 @@ void x500_bag_recorder_node::setupConnections() {
     auto qos = rclcpp::QoS(rclcpp::QoSInitialization(qos_profile.history, 5), qos_profile);
 
 
-    _bagWriter = std::make_unique<rosbag2_cpp::Writer>();
+
     _lidarSubscriber = this->create_subscription<sensor_msgs::msg::PointCloud2>(
          _topics.lidarTopic, 10, std::bind(&x500_bag_recorder_node::lidarCallback, this, std::placeholders::_1)); 
     _lidarImuSubscriber = this->create_subscription<sensor_msgs::msg::Imu>(
@@ -58,19 +59,19 @@ void x500_bag_recorder_node::setupConnections() {
 void x500_bag_recorder_node::lidarCallback(std::shared_ptr<rclcpp::SerializedMessage> msg){
     rclcpp::Time time_stamp = this->now();
     if(_flags.saveToBag == 1)
-        _bagWriter->write(msg, _namespace + "/" + _topics.lidarTopic, "sensor_msgs/msg/PointCloud2", time_stamp);
+        _bagWriter.write(msg, _namespace + "/" + _topics.lidarTopic, "sensor_msgs/msg/PointCloud2", time_stamp);
 }
 
 void x500_bag_recorder_node::imuLidarCallback(std::shared_ptr<rclcpp::SerializedMessage> msg){
     rclcpp::Time time_stamp = this->now();
     if(_flags.saveToBag == 1)
-        _bagWriter->write(msg, _namespace + "/" + _topics.imuLidarTopic, "sensor_msgs/msg/Imu", time_stamp);
+        _bagWriter.write(msg, _namespace + "/" + _topics.imuLidarTopic, "sensor_msgs/msg/Imu", time_stamp);
 }
 
 void x500_bag_recorder_node::vehicleOdomCallback(std::shared_ptr<rclcpp::SerializedMessage> msg){
     rclcpp::Time time_stamp = this->now();
     if(_flags.saveToBag == 1)
-        _bagWriter->write(msg, _namespace + "/" + _topics.vehicleOdometryTopic, "px4_msgs/msg/VehicleOdometry", time_stamp);
+        _bagWriter.write(msg, _namespace + "/" + _topics.vehicleOdometryTopic, "px4_msgs/msg/VehicleOdometry", time_stamp);
 }
 
 void x500_bag_recorder_node::rcCallback(const px4_msgs::msg::RcChannels &msg){
@@ -78,13 +79,13 @@ void x500_bag_recorder_node::rcCallback(const px4_msgs::msg::RcChannels &msg){
     _flags.reduceOutliers = msg.channels[7];
 
     if(msg.channels[11]==1 && _flags.allowRestart){
+            RCLCPP_INFO(this->get_logger(), "inside if");
         _flags.allowRestart=false;
-        this->stopRecording();
-        this->startRecording();
+        stopRecording();
+        startRecording();
     }
-    else {
+    if(msg.channels[11]==-1)
         _flags.allowRestart=true;
-    }
 }
 
 

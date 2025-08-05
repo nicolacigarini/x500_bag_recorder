@@ -4,4 +4,4 @@
   imu_lidar_subscriber_topic: livox/imu
   vehicle_odom_subscriber_topic: fmu/out/vehicle_odometry
   rc_channels_topic: fmu/out/rc_channels
-  file_path: /home/sparcs/droneBag
+  file_path: /home/ciga/droneBag
