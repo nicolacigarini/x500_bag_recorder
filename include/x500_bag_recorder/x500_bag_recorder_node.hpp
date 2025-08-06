@@ -3,6 +3,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "px4_msgs/msg/rc_channels.hpp"
 #include "px4_msgs/msg/vehicle_odometry.hpp"
+#include "px4_msgs/msg/timesync_status.hpp"
 #include "rosbag2_cpp/writer.hpp"
 #include "sensor_msgs/msg/point_cloud2.hpp"
 #include "sensor_msgs/msg/imu.hpp"
@@ -19,6 +20,7 @@ class x500_bag_recorder_node : public rclcpp::Node {
         std::string lidarTopic;
         std::string imuLidarTopic;
         std::string rcChannelsTopic;
+        std::string timesyncTopic;
         std::string vehicleOdometryTopic;
     };
 
@@ -31,6 +33,7 @@ class x500_bag_recorder_node : public rclcpp::Node {
         void lidarCallback(std::shared_ptr<rclcpp::SerializedMessage>);
         void vehicleOdomCallback(std::shared_ptr<rclcpp::SerializedMessage>);
         void imuLidarCallback(std::shared_ptr<rclcpp::SerializedMessage>);
+        void timesyncCallback(std::shared_ptr<rclcpp::SerializedMessage>);
         void rcCallback(const px4_msgs::msg::RcChannels &msg);
 
     private:
@@ -41,6 +44,7 @@ class x500_bag_recorder_node : public rclcpp::Node {
         rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr _lidarImuSubscriber;
         rclcpp::Subscription<px4_msgs::msg::RcChannels>::SharedPtr _rcSubscriber;
         rclcpp::Subscription<px4_msgs::msg::VehicleOdometry>::SharedPtr _vehicleOdomSubscriber;
+        rclcpp::Subscription<px4_msgs::msg::TimesyncStatus>::SharedPtr _timesyncSubscriber;
         rosbag2_cpp::Writer _bagWriter;
 };
 

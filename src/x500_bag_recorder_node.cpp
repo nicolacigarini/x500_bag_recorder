@@ -15,6 +15,7 @@ x500_bag_recorder_node::x500_bag_recorder_node(): Node("x500_bag_recorder_node",
 
 void x500_bag_recorder_node::startRecording() {
     RCLCPP_INFO(this->get_logger(), "before opening");
+
     std::time_t t = std::time(nullptr);
     std::tm tm = *std::localtime(&t);
     char buffer[20];
@@ -23,7 +24,9 @@ void x500_bag_recorder_node::startRecording() {
     storage_options.uri = this->get_parameter("file_path").as_string() + "/bag_" + std::string(buffer);
     storage_options.storage_id = "sqlite3";
     _bagWriter.open(storage_options);   
-     RCLCPP_INFO(this->get_logger(), "after opening");
+    RCLCPP_INFO(this->get_logger(), "after opening");
+    std::cout << "Local time: " << std::put_time(&tm, "%c %Z") << '\n';
+
 
 }
 
@@ -35,6 +38,7 @@ void x500_bag_recorder_node::loadParams() {
     _topics.lidarTopic = this->get_parameter("lidar_subscriber_topic").as_string();
     _topics.imuLidarTopic = this->get_parameter("imu_lidar_subscriber_topic").as_string();
     _topics.vehicleOdometryTopic = this->get_parameter("vehicle_odom_subscriber_topic").as_string();
+    _topics.timesyncTopic = this->get_parameter("timesync_status_topic").as_string();
     _topics.rcChannelsTopic = this->get_parameter("rc_channels_topic").as_string();
     _namespace = this->get_namespace();
 }
@@ -54,6 +58,8 @@ void x500_bag_recorder_node::setupConnections() {
         _topics.rcChannelsTopic, qos, std::bind(&x500_bag_recorder_node::rcCallback, this, std::placeholders::_1));   
     _vehicleOdomSubscriber = this->create_subscription<px4_msgs::msg::VehicleOdometry>(
         _topics.vehicleOdometryTopic, qos, std::bind(&x500_bag_recorder_node::vehicleOdomCallback, this, std::placeholders::_1));   
+    _timesyncSubscriber = this->create_subscription<px4_msgs::msg::TimesyncStatus>(
+        _topics.timesyncTopic, qos, std::bind(&x500_bag_recorder_node::timesyncCallback, this, std::placeholders::_1));   
 }
 
 void x500_bag_recorder_node::lidarCallback(std::shared_ptr<rclcpp::SerializedMessage> msg){
@@ -72,6 +78,12 @@ void x500_bag_recorder_node::vehicleOdomCallback(std::shared_ptr<rclcpp::Seriali
     rclcpp::Time time_stamp = this->now();
     if(_flags.saveToBag == 1)
         _bagWriter.write(msg, _namespace + "/" + _topics.vehicleOdometryTopic, "px4_msgs/msg/VehicleOdometry", time_stamp);
+}
+
+void x500_bag_recorder_node::timesyncCallback(std::shared_ptr<rclcpp::SerializedMessage> msg){
+    rclcpp::Time time_stamp = this->now();
+    if(_flags.saveToBag == 1)
+        _bagWriter.write(msg, _namespace + "/" + _topics.timesyncTopic, "px4_msgs/msg/TimesyncStatus", time_stamp);
 }
 
 void x500_bag_recorder_node::rcCallback(const px4_msgs::msg::RcChannels &msg){
